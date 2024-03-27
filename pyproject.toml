@@ -1,0 +1,21 @@
+[tool.poetry]
+name = "dotcom"
+version = "0.1.0"
+description = ""
+authors = ["shahdivyank <divyank.shah.2016@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.12"
+python-dotenv = "^1.0.1"
+uvicorn = "^0.29.0"
+
+
+[tool.poetry.group.dev.dependencies]
+setuptools = "^69.2.0"
+wheel = "^0.43.0"
+twine = "^5.0.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
