@@ -13,7 +13,7 @@ class Dotcom:
     def __init__(self):
         load_dotenv()
 
-    def _parse_params(self, query):
+    def _parse_query(self, query):
         results = re.findall("^[a-zA-Z0-9_-]+=[a-zA-Z0-9%._-]+(&[a-zA-Z0-9_-]+=[a-zA-Z0-9%._-]+)*$", query)
 
         if results == []:
@@ -28,9 +28,20 @@ class Dotcom:
         
         return queryParams
 
-    async def _execute(self, module, method, receive, params):
+    def _parse_params(self, route, filepath):
+        params = dict()
 
-        req = { "params": params }
+        split_filepath = filepath.split("/")
+        split_route  = route.split("/")
+
+        for index in range(len(split_filepath)):
+            if split_filepath[index] != split_route[index]:
+                params[split_filepath[index][1:-1]] = split_route[index]
+
+        return params
+
+    async def _execute(self, module, method, receive, query, params):
+        req = { "query": query, "params": params }
 
         if method == "POST":
             body  = await receive()
@@ -48,37 +59,23 @@ class Dotcom:
     async def run(self, scope, receive, send):
         method = scope["method"]
         path = scope["path"]
-        params = self._parse_params(scope["query_string"].decode('utf-8'))
+        query = self._parse_query(scope["query_string"].decode('utf-8'))
 
-        response = ""    
+        response = ""
 
-        try:
-            complete_path = BASE_FILEPATH + path + "/route.py"
+        all_possible_routes = glob(os.path.join(BASE_FILEPATH, "**", r"route.py"), recursive=True)
 
-            # WORKS FOR ROUTE.PY IN A GIVEN FOLDER
-            if  os.path.exists(complete_path):
-                complete_path = complete_path.replace("/", ".").replace(".py", "")[2:]
-                module = import_module(complete_path)
-                response = await self._execute(module, method, receive, params)
-
-            # CHECK FOR DYNAMIC ROUTING
-            else:
-                possible_paths = glob(os.path.join(BASE_FILEPATH, "**", r"route.py"), recursive=True)
-                for possible_path in possible_paths:
-                    if len(possible_path.split("/")) != len(complete_path.split("/")):
-                        continue
-                    else:
-                        path = re.findall(r"\[[a-z]+\]", possible_path)
-                        if len(path) == 1:
-                            index = possible_path.find(path[0])
-                            if possible_path[:index] == complete_path[:index]:
-                                possible_path = possible_path.replace("/", ".").replace(".py", "")[2:]
-                                module = import_module(possible_path)
-                                response = await self._execute(module, method, receive, params)
-                                print(path[0][1:-1], complete_path[index: complete_path.find("/", index)])
-
-        except Exception as e:
-            print("error", e)
+        for possible_route in all_possible_routes:
+            trimmed_route = possible_route[5:-9]
+            striped_route = re.sub("\[[A-Za-z0-9_-]+\]", "[A-Za-z0-9_-]+", trimmed_route)
+            striped_route = "^" + striped_route + "$"
+            search = re.match(striped_route, path)
+            
+            if search:
+                params = self._parse_params(path, trimmed_route)
+                route = possible_route.replace("/", ".").replace(".py", "")[2:]
+                module = import_module(route)
+                response = await self._execute(module, method, receive, query, params)
 
         await send({
         'type': 'http.response.start',
