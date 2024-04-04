@@ -1,0 +1,37 @@
+name: ACM UCR Website
+on:
+  pull_request:
+    branches: [main, dev]
+  workflow_dispatch:
+
+jobs:
+  linting:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set Up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip poetry
+          poetry add flake8
+          poetry install
+      - name: Run flake8
+        run: poetry run flake8 dotcom
+  formatting:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set Up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip poetry
+          poetry add black
+          poetry install
+      - name: Run Black
+        run: poetry run black --check dotcom
