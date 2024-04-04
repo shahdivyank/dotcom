@@ -30,6 +30,7 @@ jobs:
           python-version: '3.x'
       - name: Install Dependencies
         run: |
-          python -m pip install --upgrade pip black
+          python -m pip install --upgrade pip poetry
+          poetry add black
       - name: Run Black
-        run: python -m black --check dotcom
+        run: poetry run black --check dotcom
