@@ -1,3 +1,8 @@
 /dist
 /build
 /dotcom.egg-info
+# python virtual environment
+/Lib
+/Scripts
+pyvenv.cfg
+/Include
