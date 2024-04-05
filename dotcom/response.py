@@ -10,7 +10,6 @@ class Response:
 
     def json(self, data: str = ""):
         self.response.update({"data": data})
-        print(self, type(self))
         return self
 
     def status(self, status: int):
