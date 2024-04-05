@@ -2,27 +2,20 @@ import os
 import re
 from importlib import import_module
 from glob import glob
+from typing import Callable
 from dotenv import load_dotenv
 import json
 from inspect import signature
 
-BASE_FILEPATH = "./api"
+BASE_FILEPATH: str = "./api"
 
 
 class Dotcom:
 
-    def __init__(self):
+    def __init__(self) -> None:
         load_dotenv()
 
-    def _parse_query(self, query):
-        results = re.findall(
-            "^[a-zA-Z0-9_-]+=[a-zA-Z0-9%._-]+(&[a-zA-Z0-9_-]+=[a-zA-Z0-9%._-]+)*$",
-            query,
-        )
-
-        if results == []:
-            return {}
-
+    def _parse_query(self, query: str) -> dict:
         params = query.split("&")
         queryParams = dict()
 
@@ -32,7 +25,7 @@ class Dotcom:
 
         return queryParams
 
-    def _parse_params(self, route, filepath):
+    def _parse_params(self, route: str, filepath: str) -> dict:
         params = dict()
 
         split_filepath = filepath.split("/")
@@ -44,7 +37,7 @@ class Dotcom:
 
         return params
 
-    async def _execute(self, module, method, receive, query, params):
+    async def _execute(self, module: Callable, method: str, receive: Callable, query: dict, params: dict):
         req = {"query": query, "params": params}
 
         if method == "POST":
@@ -60,7 +53,7 @@ class Dotcom:
 
         return response.parse_response()
 
-    async def run(self, scope, receive, send):
+    async def run(self, scope: dict, receive: Callable, send: Callable):
         method = scope["method"]
         path = scope["path"]
         query = self._parse_query(scope["query_string"].decode("utf-8"))
