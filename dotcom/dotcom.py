@@ -56,8 +56,19 @@ class Dotcom:
         return response.parse_response()
 
     async def run(self, scope: dict, receive: Callable, send: Callable):
+        path = scope["path"]
+        print(path)
         if not path.startswith('/api/'):
             response = "Invalid route: Route should start with '/api/'"
+            await send(
+            {
+                "type": "http.response.start",
+                "status": 200,
+                "headers": [
+                    [b"content-type", b"text/plain"],
+                ],
+            }
+            )
             await send(
                 {
                     "type": "http.response.body",
@@ -66,7 +77,6 @@ class Dotcom:
             )
             return
         method = scope["method"]
-        path = scope["path"]
         query = self._parse_query(scope["query_string"].decode("utf-8"))
 
         response = ""
