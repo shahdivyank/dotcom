@@ -16,12 +16,14 @@ class Dotcom:
         load_dotenv()
 
     def _parse_query(self, query: str) -> dict:
-        params = query.split("&")
         queryParams = dict()
 
-        for param in params:
-            [key, value] = param.split("=")
-            queryParams[key] = value
+        if query != "":
+            params = query.split("&")
+
+            for param in params:
+                [key, value] = param.split("=")
+                queryParams[key] = value
 
         return queryParams
 
