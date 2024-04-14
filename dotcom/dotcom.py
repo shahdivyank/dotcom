@@ -64,7 +64,7 @@ class Dotcom:
 
     async def run(self, scope: dict, receive: Callable, send: Callable):
         path = scope["path"]
-        
+
         if not path.startswith("/api/"):
             response = "Invalid route: Route should start with '/api/'"
             await send(
