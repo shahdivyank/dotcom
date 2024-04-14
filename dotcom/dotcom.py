@@ -39,7 +39,14 @@ class Dotcom:
 
         return params
 
-    async def _execute(self, module: Callable, method: str, receive: Callable, query: dict, params: dict):
+    async def _execute(
+        self,
+        module: Callable,
+        method: str,
+        receive: Callable,
+        query: dict,
+        params: dict,
+    ):
         req = {"query": query, "params": params}
 
         if method == "POST":
@@ -56,12 +63,30 @@ class Dotcom:
         return response.parse_response()
 
     async def run(self, scope: dict, receive: Callable, send: Callable):
-        method = scope["method"]
         path = scope["path"]
+
+        if not path.startswith("/api/"):
+            response = "Invalid route: Route should start with '/api/'"
+            await send(
+                {
+                    "type": "http.response.start",
+                    "status": 200,
+                    "headers": [
+                        [b"content-type", b"text/plain"],
+                    ],
+                }
+            )
+            await send(
+                {
+                    "type": "http.response.body",
+                    "body": response.encode("utf-8"),
+                }
+            )
+            return
+        method = scope["method"]
         query = self._parse_query(scope["query_string"].decode("utf-8"))
 
         response = ""
-
         all_possible_routes = glob(
             os.path.join(BASE_FILEPATH, "**", r"route.py"), recursive=True
         )
@@ -75,6 +100,7 @@ class Dotcom:
             search = re.match(striped_route, path)
 
             if search:
+
                 params = self._parse_params(path, trimmed_route)
                 route = possible_route.replace("/", ".").replace(".py", "")[2:]
                 module = import_module(route)
@@ -89,7 +115,6 @@ class Dotcom:
                 ],
             }
         )
-
         await send(
             {
                 "type": "http.response.body",
